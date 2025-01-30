@@ -13,7 +13,7 @@ const crypto = require("crypto");
 const log = require("electron-log");
 
 log.initialize();
-log.transports.file.path = 'D:\\Node9 New Project\\node9-vpn-app\\app.log';
+log.transports.file.getFile().path = path.join(app.getPath("userData"), "app.log");
 
 let mainWindow = null;
 let vpnProcess = null;
@@ -188,99 +188,104 @@ expressApp.post("/api/sign-out", (req, res) => {
  * Writes username/password to auth.txt, spawns OpenVPN
  */
 expressApp.post("/api/connect", (req, res) => {
-  const { server, username, password } = req.body;
+  try {
+    const { server, username, password } = req.body;
 
-  if (!fs.existsSync(server)) {
-    return res.status(400).json({ error: "Configuration file not found." });
+    if (!fs.existsSync(server)) {
+      return res.status(400).json({ error: "Configuration file not found." });
+    }
+
+    const openvpnPath = "C:\\Program Files\\OpenVPN\\bin\\openvpn.exe";
+    if (!fs.existsSync(openvpnPath)) {
+      return res.status(400).json({ error: "OpenVPN executable not found." });
+    }
+
+    const userDataPath = app.getPath("userData");
+    const authFilePath = path.join(userDataPath, "auth.txt");
+    fs.writeFileSync(authFilePath, `${username}\r\n${password}\r\n`, "utf8");
+    
+    log.info("Username:", username);
+    log.info("Password:", password);
+
+    userInitiatedDisconnect = false;
+    vpnProcess = spawn(openvpnPath, [
+      "--config",
+      server,
+      "--auth-user-pass",
+      authFilePath,
+    ]);
+
+    let connectionState = "Disconnected";
+
+    vpnProcess.stdout.on("data", (data) => {
+      const output = data.toString();
+
+
+      log.info("VPN stdout:", output);
+
+      if (output.includes("Peer Connection Initiated")) {
+        connectionState = "Connecting";
+        sendToRenderer("connectionStatus", { state: "Connecting" });
+      }
+      if (output.includes("AUTH_FAILED")) {
+        connectionState = "Error";
+        sendToRenderer("connectionStatus", {
+          state: "Error",
+          error: "Authentication failed.",
+        });
+        vpnProcess.kill();
+      }
+      if (output.includes("Initialization Sequence Completed")) {
+        connectionState = "Connected";
+        sendToRenderer("connectionStatus", { state: "Connected" });
+      }
+    });
+
+    vpnProcess.stderr.on("data", (data) => {
+      const errorOutput = data.toString();
+      log.error("VPN stderr:", errorOutput);
+
+      if (
+        errorOutput.includes("AUTH_FAILED") ||
+        errorOutput.includes("Authentication failed")
+      ) {
+        connectionState = "Error";
+        sendToRenderer("connectionStatus", {
+          state: "Error",
+          error: "Authentication failed. Please check your credentials.",
+        });
+        vpnProcess.kill();
+      } else {
+        sendToRenderer("errorMessage", errorOutput);
+      }
+    });
+
+    vpnProcess.on("exit", (code) => {
+      log.info("VPN process exited with code:", code);
+
+      if (connectionState === "Error") {
+        return;
+      }
+      if (userInitiatedDisconnect) {
+        sendToRenderer("connectionStatus", { state: "Disconnected" });
+        userInitiatedDisconnect = false;
+        return;
+      }
+      if (code !== 0) {
+        sendToRenderer("connectionStatus", {
+          state: "Error",
+          error: `Process exited with code ${code}`,
+        });
+      } else {
+        sendToRenderer("connectionStatus", { state: "Disconnected" });
+      }
+    });
+
+    res.json({ success: true, message: "OpenVPN started successfully." });
+  } catch (error) {
+    log.error("Error connecting:", error);
+    res.status(500).json({ error: error.message });
   }
-
-  const openvpnPath = "C:\\Program Files\\OpenVPN\\bin\\openvpn.exe";
-  if (!fs.existsSync(openvpnPath)) {
-    return res.status(400).json({ error: "OpenVPN executable not found." });
-  }
-
-  // Write user/pass to auth.txt
-  // insecure but works for now
-  const authFilePath = path.join(__dirname, "auth.txt");
-  fs.writeFileSync(authFilePath, `${username}\r\n${password}\r\n`, "utf8");
-
-  userInitiatedDisconnect = false;
-
-  //spawns vpn process and parses app info into it
-  vpnProcess = spawn(openvpnPath, [
-    "--config",
-    server,
-    "--auth-user-pass",
-    authFilePath,
-  ]);
-
-  let connectionState = "Disconnected";
-
-  vpnProcess.stdout.on("data", (data) => {
-    const output = data.toString();
-
-
-    log.info("VPN stdout:", output);
-
-    if (output.includes("Peer Connection Initiated")) {
-      connectionState = "Connecting";
-      sendToRenderer("connectionStatus", { state: "Connecting" });
-    }
-    if (output.includes("AUTH_FAILED")) {
-      connectionState = "Error";
-      sendToRenderer("connectionStatus", {
-        state: "Error",
-        error: "Authentication failed.",
-      });
-      vpnProcess.kill();
-    }
-    if (output.includes("Initialization Sequence Completed")) {
-      connectionState = "Connected";
-      sendToRenderer("connectionStatus", { state: "Connected" });
-    }
-  });
-
-  vpnProcess.stderr.on("data", (data) => {
-    const errorOutput = data.toString();
-    log.error("VPN stderr:", errorOutput);
-
-    if (
-      errorOutput.includes("AUTH_FAILED") ||
-      errorOutput.includes("Authentication failed")
-    ) {
-      connectionState = "Error";
-      sendToRenderer("connectionStatus", {
-        state: "Error",
-        error: "Authentication failed. Please check your credentials.",
-      });
-      vpnProcess.kill();
-    } else {
-      sendToRenderer("errorMessage", errorOutput);
-    }
-  });
-
-  vpnProcess.on("exit", (code) => {
-    log.info("VPN process exited with code:", code);
-
-    if (connectionState === "Error") {
-      return;
-    }
-    if (userInitiatedDisconnect) {
-      sendToRenderer("connectionStatus", { state: "Disconnected" });
-      userInitiatedDisconnect = false;
-      return;
-    }
-    if (code !== 0) {
-      sendToRenderer("connectionStatus", {
-        state: "Error",
-        error: `Process exited with code ${code}`,
-      });
-    } else {
-      sendToRenderer("connectionStatus", { state: "Disconnected" });
-    }
-  });
-
-  res.json({ success: true, message: "OpenVPN process started successfully." });
 });
 
 /**
