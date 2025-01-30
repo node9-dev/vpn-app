@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Node9 VPN</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.node9.dev/assets/js/redirct.js" crossorigin="anonymous" async></script>
+  <style>
+    /* Optional: invert icons to white if not white */
+    .icon-white {
+      filter: invert(1);
+    }
+
+    /* Make the header a draggable region so user can move the frameless window */
+    .header {
+      -webkit-app-region: drag;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Page -->
+  <div id="login-page" class="login-page hidden">
+    <div class="login-wrapper">
+      <h2>Login to Node9 VPN</h2>
+      <form id="login-form" class="login-form">
+        <!-- ... same as before ... -->
+        <label for="login-username">Username:</label>
+        <input type="text" id="login-username" required />
+        
+        <label for="login-password">Password:</label>
+        <input type="password" id="login-password" required />
+        
+        <button type="submit" id="login-button">Login</button>
+      </form>
+      <p id="login-message" class="login-message"></p>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="icon">
+          <svg width="266" height="321" viewBox="0 0 266 321" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 40px; height: auto;">
+            <g filter="url(#filter0_d_68_3)">
+            <path d="M77.8915 213.059V114.341L121.718 87.8718V110.002L97.6351 125.406V177.949L167.931 136.254V118.746L185.505 107.615L187.675 204.381L141.462 233.02V208.72L167.931 193.533V160.554L77.8915 213.059Z" fill="white"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M133 23L243 91.5602V229.834L133 298.542L23 229.765V91.5602L133 23ZM51.856 107.181L132.783 56.6292L215.012 107.832V213.71L133 264.913L51.856 214.144V107.181Z" fill="url(#paint0_linear_68_3)"/>
+            </g>
+            <defs>
+            <filter id="filter0_d_68_3" x="0.6" y="0.6" width="264.8" height="320.342" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+            <feOffset/>
+            <feGaussianBlur stdDeviation="11.2"/>
+            <feComposite in2="hardAlpha" operator="out"/>
+            <feColorMatrix type="matrix" values="0 0 0 0 0.2 0 0 0 0 0.466667 0 0 0 0 0.866667 0 0 0 0.25 0"/>
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_68_3"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_68_3" result="shape"/>
+            </filter>
+            <linearGradient id="paint0_linear_68_3" x1="23.1586" y1="-53.422" x2="172.796" y2="346.356" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#3377DD"/>
+            <stop offset="0.486789" stop-color="#315BC9"/>
+            <stop offset="1" stop-color="#263EBC"/>
+            </linearGradient>
+            </defs>
+            </svg>
+        </div>
+
+        <!-- <a href="settings.html" class="icon" style="display: inline-block;">
+          <img 
+            src="https://cdn-icons-png.flaticon.com/128/2040/2040504.png"
+            alt="Settings"
+            class="sidebar-img icon-white"
+            style="width: 28px; height: 28px;"
+          />
+        </a> -->
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="icon" style="cursor: pointer;" onclick="signOut()">
+          <img
+            src="https://cdn-icons-png.flaticon.com/128/1828/1828427.png"
+            alt="Sign Out"
+            class="sidebar-img icon-white"
+            style="width: 28px; height: 28px;"
+          />
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Draggable header region -->
+      <header class="header">
+        <h1>Node9 VPN</h1>
+        <div class="status" id="status-text">Disconnected</div>
+      </header>
+
+      <!-- Power Button -->
+      <div class="power-button">
+        <div
+          class="inner-circle disconnected"
+          id="power-circle"
+          onclick="toggleConnection()"
+        >
+          <img
+            class="power-icon"
+            src="https://cdn-icons-png.flaticon.com/512/1445/1445388.png"
+            alt="Power Icon"
+          />
+        </div>
+      </div>
+
+      <!-- Connection Details -->
+      <div class="connection-details">
+        <p>Connect to:</p>
+        <div class="server-location">
+          <select id="server-dropdown" class="dropdown">
+            <option value="">Select a server</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stats Section -->
+      <div class="stats">
+        <div class="stat">
+          <p id="connected-time">00:00:00</p>
+          <small>Connected</small>
+        </div>
+        <div class="stat">
+          <p id="protocol">OpenVPN</p>
+          <small>Protocol</small>
+        </div>
+      </div>
+
+      <!-- Output messages or logs -->
+      <div id="output"></div>
+    </main>
+  </div>
+
+  <!-- signOut function example -->
+  <script>
+    function signOut() {
+      fetch("/api/sign-out", { method: "POST" })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to sign out.");
+          }
+          return response.json();
+        })
+        .then(() => {
+          document.getElementById("login-page").classList.remove("hidden");
+        })
+        .catch((err) => {
+          console.error("Sign out error:", err);
+        });
+    }
+  </script>
+
+  <script src="app.js"></script>
+</body>
+</html>

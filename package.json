@@ -1,0 +1,52 @@
+{
+  "name": "node9-vpn-app",
+  "version": "1.0.0",
+  "description": "Node9 VPN Client",
+  "author": "Node9 Team",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-builder",
+    "dev": "concurrently \"npm run server\" \"npm start\""
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "body-parser": "^1.20.2",
+    "electron-log": "^5.2.4",
+    "express": "^4.18.2",
+    "keytar": "^7.9.0",
+    "uuid": "^11.0.5",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "electron": "^25.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "dev.node9.vpn",
+    "productName": "Node9 VPN",
+    "asar": true,
+    "directories": {
+      "output": "release-builds"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "public/**/*",
+      "configs/**/*",
+      "assets/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+}

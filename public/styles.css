@@ -1,0 +1,461 @@
+/* Import a modern, clean font (optional) */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Montserrat', sans-serif;
+  background-color: #181c2f; /* deep navy-blue background */
+  color: #fff;
+}
+
+/********************************************
+ * Layout Wrapper
+ ********************************************/
+.wrapper {
+  display: flex;
+  height: 100vh;
+}
+
+/********************************************
+ * Sidebar
+ ********************************************/
+.sidebar {
+  width: 70px;
+  background-color: #111429;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.sidebar-top, .sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+/* The .icon class can hold either an img or an emoji, etc. */
+.icon {
+  font-size: 1.3rem;
+  color: #aaa;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.3s, transform 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon:hover {
+  color: #f5c957;
+  transform: scale(1.1);
+}
+
+/* If your icon is an <img> or inline SVG, you can specify size here */
+.sidebar-img {
+  display: block;
+  margin: 0 auto;
+  /* if you want to center it horizontally inside .icon */
+}
+
+/********************************************
+ * .icon-white
+ * If you have a dark or colored icon that you want white,
+ * this inverts it. Remove if your icons are already white.
+ ********************************************/
+.icon-white {
+  filter: invert(1);
+}
+
+/********************************************
+ * Main Content
+ ********************************************/
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  position: relative;
+}
+
+/********************************************
+ * Header
+ ********************************************/
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+.header h1 {
+  font-size: 1.5rem;
+  color: #ffffff;
+}
+.status {
+  font-size: 1rem;
+  color: #ffffff;
+  background-color: rgba(245,201,87,0.1);
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/********************************************
+ * Power Button
+ ********************************************/
+.power-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.inner-circle {
+  width: 120px;
+  height: 120px;
+  border: 2px solid #b7b7b7;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background: rgba(245,201,87,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+}
+
+.inner-circle:hover {
+  transform: scale(1.05);
+}
+
+.inner-circle.connected {
+  /* Trigger the pulse animation */
+  animation: pulseGlow 1.5s infinite;
+  /* A medium blue glow when idle */
+  box-shadow: 0 0 15px #b7b7b7;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 5px #b7b7b7;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px #b7b7b7;
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 5px #b7b7b7;
+    transform: scale(1);
+  }
+}
+
+
+/* Disconnected state */
+.inner-circle.disconnected {
+  border-color: #b7b7b7;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
+/* The power icon inside the circle */
+.power-icon {
+  width: 60px;
+  height: 60px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.inner-circle:hover .power-icon {
+  transform: scale(1.2);
+}
+
+/********************************************
+ * Connection Details
+ ********************************************/
+.connection-details {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.connection-details p {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #aaa;
+}
+.server-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+/********************************************
+ * Stats
+ ********************************************/
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin-bottom: 2rem;
+}
+.stat {
+  text-align: center;
+}
+.stat p {
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+  color: #fff;
+  font-weight: 500;
+}
+.stat small {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+/********************************************
+ * Output
+ ********************************************/
+#output {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+/********************************************
+ * Dropdown
+ ********************************************/
+.dropdown {
+  background-color: #1c1f2f;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 0.5rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+}
+.dropdown:focus {
+  outline: none;
+  border-color: #ffffff;
+}
+.dropdown option {
+  background-color: #1c1f2f;
+  color: #fff;
+}
+
+/********************************************
+ * Login Page Overlay
+ ********************************************/
+ .login-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f7f8fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+  visibility: visible;
+}
+.login-page.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.login-wrapper {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  color: #1c1e21;
+  max-width: 400px;
+  width: 100%;
+  font-family: "Inter", sans-serif;
+}
+
+.logo {
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 24px;
+  color: #1c1e21;
+  margin-bottom: 8px;
+}
+
+p {
+  color: #73777f;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.login-form {
+  margin-top: 1rem;
+}
+
+.login-form label {
+  display: block;
+  margin: 0.5rem 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #73777f;
+  text-align: left;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #1c1e21;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #3377dd;
+  box-shadow: 0 0 0 2px rgba(51, 119, 221, 0.3);
+}
+
+#login-button {
+  background-color: #212223;
+  color: #ffffff;
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  font-family: "Inter", sans-serif;
+}
+#login-button:hover {
+  background-color: #333;
+}
+
+.options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 20px;
+  color: #73777f;
+}
+
+.options a {
+  color: #3377dd;
+  text-decoration: none;
+}
+
+.footer {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #73777f;
+}
+
+.footer a {
+  color: #3377dd;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .login-page {
+    background-color: #0C0C14;
+  }
+
+  .login-wrapper {
+    background-color: #151520;
+    color: #f0f0f0;
+  }
+
+  h1 {
+    color: #f0f0f0;
+  }
+
+  p {
+    color: #8c8c8c;
+  }
+
+  .login-form label {
+    color: #8c8c8c;
+  }
+
+  .login-form input {
+    background-color: #1d1d2c;
+    color: #f0f0f0;
+    border-color: #212121;
+  }
+
+  .login-form input:focus {
+    border-color: #3377dd;
+    box-shadow: 0 0 0 2px rgba(51, 119, 221, 0.3);
+  }
+
+  #login-button {
+    background-color: #3377dd;
+  }
+
+  #login-button:hover {
+    background-color: #0884f8;
+  }
+
+  .footer {
+    color: #8c8c8c;
+  }
+
+  .footer a {
+    color: #f0f0f0;
+  }
+}
+
+
+/********************************************
+ * Spinner (login button)
+ ********************************************/
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid rgb(53, 104, 206);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  margin-left: 10px;
+  display: flex;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.power-icon {
+  width: 60px;
+  height: 60px;
+  filter: invert(1); /* Inverts black to white */
+  transition: transform 0.3s ease-in-out;
+}
+
+.header {
+  -webkit-app-region: drag; /* allows drag in header area */
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
