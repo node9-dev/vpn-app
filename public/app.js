@@ -1,4 +1,3 @@
-
 /********************************************
  * app.js
  ********************************************/
@@ -18,16 +17,17 @@ function toggleConnection() {
 }
 
 function openBrowser(url) {
+  // Fixed the fetch syntax to use backticks:
   fetch(`/api/openbrowser?url=${encodeURIComponent(url)}`)
-      .then(response => response.json())
-      .then(data => {
-          if (data.success) {
-              console.log("Browser opened successfully.");
-          } else {
-              console.error("Failed to open browser:", data.error);
-          }
-      })
-      .catch(error => console.error("Error:", error));
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log("Browser opened successfully.");
+      } else {
+        console.error("Failed to open browser:", data.error);
+      }
+    })
+    .catch(error => console.error("Error:", error));
 }
 
 
@@ -40,8 +40,7 @@ function connect() {
     return;
   }
 
-  // Load credentials from credentials.json\
-
+  // Load credentials from credentials.json
   // This is not for VPN auth purely just app
   fetch("/api/get-saved-credentials")
     .then((response) => {
@@ -259,26 +258,26 @@ document.getElementById("login-form").addEventListener("submit", function (e) {
 
 
 function checkUpdates() {
-  const currentVersion = "2";
+  const currentVersion = "1.8";
   fetch("/api/check-updates")
-      .then(response => response.json())
-      .then(data => {
-        if (data.updateAvailable) {
-          document.getElementById("output").innerHTML =
-              `An Update is available: Updated build: ${data.latestVersion} Your build: ${currentVersion} Node9 VPN might not work until you update <a href="#" id="updateLink">Here</a>`;
+    .then(response => response.json())
+    .then(data => {
+      if (data.updateAvailable) {
+        document.getElementById("output").innerHTML =
+          `An Update is available: Updated build: ${data.latestVersion} Your build: ${currentVersion} Node9 VPN might not work until you update <a href="#" id="updateLink">Here</a>`;
   
-          document.getElementById("updateLink").addEventListener("click", (event) => {
-              event.preventDefault();
-              openBrowser("https://vpn.node9.dev/download/"); 
-          });
+        document.getElementById("updateLink").addEventListener("click", (event) => {
+          event.preventDefault();
+          openBrowser("https://vpn.node9.dev/download/"); 
+        });
       } else {
-          document.getElementById("output").innerHTML = "You are on the latest version.";
+        document.getElementById("output").innerHTML = "You are on the latest version.";
       }
-      })
-      .catch(err => {
-          document.getElementById("output").textContent =
-              "Error checking updates.";
-      });
+    })
+    .catch(err => {
+      document.getElementById("output").textContent =
+        "Error checking updates.";
+    });
 }
 
 
@@ -317,23 +316,73 @@ function signOut() {
 
 function Streamcfg() {
   const servers = [
-      { name: "AU-SYD-1", url: "https://vpn.node9.dev/configs/AU-SYD-1-V4.ovpn" },
+    { name: "AU-SYD-1", url: "https://vpn.node9.dev/configs/AU-SYD-1-V4.ovpn" },
   ];
 
   if (!window.electronAPI || !window.electronAPI.downloadConfigFiles) {
-      console.error("Electron API not loaded!");
-      return;
+    console.error("Electron API not loaded!");
+    return;
   }
 
   window.electronAPI.downloadConfigFiles(servers).then((result) => {
-      if (result.success) {
-          console.log("Configs downloaded successfully!");
-          populateServerDropdown();
-      } else {
-          console.error("Failed to download configs:", result.error);
-      }
+    if (result.success) {
+      console.log("Configs downloaded successfully!");
+      populateServerDropdown();
+    } else {
+      console.error("Failed to download configs:", result.error);
+    }
   });
 }
+
+/********************************************
+ * NEW: Ensure OpenVPN installed at launch,
+ * updates top-right status if missing
+ ********************************************/
+async function ensureOpenVPNInstalled() {
+  const statusText = document.getElementById("status-text");
+  try {
+    // 1) Check if OpenVPN is installed
+    const checkResp = await fetch("/api/check-openvpn");
+    if (!checkResp.ok) {
+      throw new Error("Failed to check OpenVPN status");
+    }
+    const checkData = await checkResp.json();
+
+    if (checkData.found) {
+      // Already installed
+      console.log("OpenVPN installed at:", checkData.path);
+      return;
+    }
+
+    // 2) If missing, show "Installing now..." in the top-right
+    statusText.textContent = "OpenVPN not installed. Installing now...";
+    statusText.style.color = "#f5c957";
+    statusText.style.backgroundColor = "rgba(245,201,87,0.1)";
+
+    // 3) Download + install
+    const dlResp = await fetch("/api/download-openvpn", { method: "POST" });
+    if (!dlResp.ok) {
+      throw new Error("Download/install request failed");
+    }
+
+    const dlData = await dlResp.json();
+    if (!dlData.success) {
+      throw new Error(dlData.error || "OpenVPN install failed");
+    }
+
+    // 4) After success, revert to "Disconnected"
+    statusText.textContent = "Disconnected";
+    statusText.style.color = "#bbb";
+    statusText.style.backgroundColor = "rgba(255,255,255,0.05)";
+  } catch (err) {
+    console.error("Error installing OpenVPN:", err);
+    // Show error status
+    statusText.textContent = "OpenVPN install error";
+    statusText.style.color = "#f44336";
+    statusText.style.backgroundColor = "rgba(244,67,54,0.1)";
+  }
+}
+
 
 /********************************************
  * Window onLoad
@@ -343,6 +392,8 @@ window.onload = function () {
   Streamcfg();
   checkCredentials();
   checkUpdates();
+  // Auto-check/install OpenVPN if missing, show "Installing" top-right
+  ensureOpenVPNInstalled();
 
   if (Notification.permission === "default") {
     Notification.requestPermission().then((permission) => {
